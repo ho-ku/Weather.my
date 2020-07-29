@@ -23,7 +23,8 @@ class ListVC: UIViewController {
     // MARK: - Instances
     private let geocoderHelper = GeocoderHelper()
     private let coreDataManager = CoreDataManager()
-    private var locationManager = CLLocationManager()
+    private let locationManager = CLLocationManager()
+    private let cache = NSCache<AnyObject, AnyObject>()
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
@@ -48,6 +49,7 @@ class ListVC: UIViewController {
         tableView.separatorStyle = .none
     }
     
+    // MARK: - Alerts
     private func presentAddLocationAlert() {
         let alertController = UIAlertController(title: "New City", message: nil, preferredStyle: .alert)
         var cityField = UITextField()
@@ -78,10 +80,19 @@ class ListVC: UIViewController {
         present(alertController, animated: true)
     }
     
+    // MARK: - Configuring cache after cell removing
+    private func removeCellFromCacheForNumber(_ num: Int) {
+        cache.removeObject(forKey: "cell\(num)" as AnyObject)
+        for number in num + 1...locations.count {
+            cache.setObject(cache.object(forKey: "cell\(number)" as AnyObject)!, forKey: "cell\(number-1)" as AnyObject)
+        }
+    }
+    
     // MARK: - IBActions
     @IBAction func addbtnPressed(_ sender: UIButton) {
         presentAddLocationAlert()
     }
+    
     @IBAction func yourLocationBtnPressed(_ sender: Any) {
         if let currentLoation = currentLocation {
             print(currentLoation.coordinate)
@@ -102,9 +113,6 @@ class ListVC: UIViewController {
 extension ListVC: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        if indexPath.row == locations.count {
-            return 60
-        }
         return 200
     }
     
@@ -113,12 +121,10 @@ extension ListVC: UITableViewDelegate {
             let objectToDelete = self.locations[indexPath.row]
             self.coreDataManager.delete(objectToDelete)
             self.locations = self.coreDataManager.fetchLocations()
+            self.removeCellFromCacheForNumber(indexPath.row)
             self.tableView.deleteRows(at: [indexPath], with: .fade)
         }
         deleteAction.image = #imageLiteral(resourceName: "delete")
-//        if let image = #imageLiteral(resourceName: "delete").cgImage {
-//            deleteAction.image = ImageWithoutRender(cgImage: image)
-//        }
         deleteAction.backgroundColor = .white
         let swipeActionsConfiguration = UISwipeActionsConfiguration(actions: [deleteAction])
         return swipeActionsConfiguration
@@ -135,11 +141,19 @@ extension ListVC: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: C.cityCellIndentifier, for: indexPath) as? CityCell else { return UITableViewCell() }
-        geocoderHelper.getCityForQuery(locations[indexPath.row].name ?? "") { (placemarks, error) in
-            guard let placemark = placemarks?.first, error == nil else { return }
-            DispatchQueue.main.async {
-                cell.cityLabel.text = placemark.locality ?? "Unrecognized"
-                cell.countryLabel.text = placemark.country ?? "Unrecognized"
+        if let cachedLocation = cache.object(forKey: "cell\(indexPath.row)" as AnyObject) as? CityLocation {
+            cell.cityLabel.text = cachedLocation.city
+            cell.countryLabel.text = cachedLocation.country
+            cell.tempLabel.text = cachedLocation.temperature
+        } else {
+            geocoderHelper.getCityForQuery(locations[indexPath.row].name ?? "") { [unowned self] (placemarks, error) in
+                guard let placemark = placemarks?.first, error == nil else { return }
+                DispatchQueue.main.async {
+                    cell.cityLabel.text = placemark.locality ?? "Unrecognized"
+                    cell.countryLabel.text = placemark.country ?? "Unrecognized"
+                    let citylocation = CityLocation(city: placemark.locality ?? "Unrecognized", country: placemark.country ?? "Unrecognized", coreDataObject: self.locations[indexPath.row], temperature: "XX", coordinates: placemark.location?.coordinate ?? CLLocationCoordinate2D())
+                    self.cache.setObject(citylocation as AnyObject, forKey: "cell\(indexPath.row)" as AnyObject)
+                }
             }
         }
         cell.selectionStyle = .none

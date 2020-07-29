@@ -2,13 +2,12 @@
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="16097.2" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="I6w-Ef-vVq">
     <device id="retina6_1" orientation="portrait" appearance="light"/>
     <dependencies>
-        <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="16087"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--Wheather.my-->
+        <!--Weather.my-->
         <scene sceneID="tne-QT-ifu">
             <objects>
                 <viewController id="BYZ-38-t0r" customClass="ListVC" customModule="Weather_my" customModuleProvider="target" sceneMemberID="viewController">
@@ -34,16 +33,16 @@
                                                             <rect key="frame" x="16" y="16" width="350" height="152"/>
                                                             <subviews>
                                                                 <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="f6W-XI-taC">
-                                                                    <rect key="frame" x="0.0" y="27.5" width="230" height="97.5"/>
+                                                                    <rect key="frame" x="0.0" y="27.5" width="210" height="97.5"/>
                                                                     <subviews>
                                                                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Unrecognized" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="20" translatesAutoresizingMaskIntoConstraints="NO" id="dpg-0R-rE3">
-                                                                            <rect key="frame" x="0.0" y="0.0" width="230" height="55"/>
+                                                                            <rect key="frame" x="0.0" y="0.0" width="210" height="55"/>
                                                                             <fontDescription key="fontDescription" name="Avenir-Medium" family="Avenir" pointSize="40"/>
                                                                             <color key="textColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                                             <nil key="highlightedColor"/>
                                                                         </label>
                                                                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Unrecognized" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="13" translatesAutoresizingMaskIntoConstraints="NO" id="uMk-KP-uL9">
-                                                                            <rect key="frame" x="0.0" y="63" width="230" height="34.5"/>
+                                                                            <rect key="frame" x="0.0" y="63" width="210" height="34.5"/>
                                                                             <fontDescription key="fontDescription" name="Avenir-Book" family="Avenir" pointSize="25"/>
                                                                             <color key="textColor" white="0.33333333333333331" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                                             <nil key="highlightedColor"/>
@@ -52,6 +51,9 @@
                                                                 </stackView>
                                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="XX°C" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="BFm-fZ-kQ2">
                                                                     <rect key="frame" x="230" y="42" width="120" height="68.5"/>
+                                                                    <constraints>
+                                                                        <constraint firstAttribute="width" constant="120" id="zKl-a7-231"/>
+                                                                    </constraints>
                                                                     <fontDescription key="fontDescription" name="Avenir-Medium" family="Avenir" pointSize="50"/>
                                                                     <color key="textColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                                     <nil key="highlightedColor"/>
@@ -62,6 +64,7 @@
                                                     <color key="backgroundColor" red="0.0" green="0.47843137250000001" blue="1" alpha="0.29999999999999999" colorSpace="custom" customColorSpace="sRGB"/>
                                                     <constraints>
                                                         <constraint firstItem="ghg-tc-aEq" firstAttribute="leading" secondItem="R4U-Zl-SIj" secondAttribute="leading" constant="16" id="XRL-Zl-bZj"/>
+                                                        <constraint firstItem="dpg-0R-rE3" firstAttribute="width" secondItem="R4U-Zl-SIj" secondAttribute="width" multiplier="0.55" id="dRe-ko-gcv"/>
                                                         <constraint firstAttribute="trailing" secondItem="ghg-tc-aEq" secondAttribute="trailing" constant="16" id="fwe-gq-j3g"/>
                                                         <constraint firstItem="ghg-tc-aEq" firstAttribute="top" secondItem="R4U-Zl-SIj" secondAttribute="top" constant="16" id="tye-6F-aPs"/>
                                                         <constraint firstAttribute="bottom" secondItem="ghg-tc-aEq" secondAttribute="bottom" constant="16" id="xv7-9B-8EW"/>
@@ -130,16 +133,18 @@
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
-                    <navigationItem key="navigationItem" title="Wheather.my" id="NTh-Sc-qd1">
+                    <navigationItem key="navigationItem" title="Weather.my" id="NTh-Sc-qd1">
                         <barButtonItem key="rightBarButtonItem" image="settings" id="OSP-hO-Svw">
                             <color key="tintColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            <connections>
+                                <segue destination="YVq-Ge-4c7" kind="show" id="esb-gk-Ggk"/>
+                            </connections>
                         </barButtonItem>
                     </navigationItem>
                     <connections>
                         <outlet property="addButton" destination="2dB-Oc-nMF" id="l5w-aj-mpx"/>
                         <outlet property="tableView" destination="pCy-e4-x4t" id="ivs-Fw-W7D"/>
                         <outlet property="yourLocationBtn" destination="Gra-g4-vg3" id="C0t-lR-Al6"/>
-                        <segue destination="YVq-Ge-4c7" kind="show" id="4Dh-3f-AtJ"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
@@ -149,7 +154,7 @@
         <!--Settings-->
         <scene sceneID="7kv-ve-FzF">
             <objects>
-                <tableViewController id="YVq-Ge-4c7" sceneMemberID="viewController">
+                <tableViewController id="YVq-Ge-4c7" customClass="SettingsTVC" customModule="Weather_my" customModuleProvider="target" sceneMemberID="viewController">
                     <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="static" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" id="Tac-ZQ-dDi">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -179,6 +184,9 @@
                                                                 <segment title="°C"/>
                                                                 <segment title="°F"/>
                                                             </segments>
+                                                            <connections>
+                                                                <action selector="unitSegmentedControlDidChanged:" destination="YVq-Ge-4c7" eventType="valueChanged" id="gXh-fS-lYb"/>
+                                                            </connections>
                                                         </segmentedControl>
                                                     </subviews>
                                                     <constraints>
@@ -203,6 +211,9 @@
                         </connections>
                     </tableView>
                     <navigationItem key="navigationItem" title="Settings" id="PDu-2Q-Veu"/>
+                    <connections>
+                        <outlet property="unitSegmentedControl" destination="8Od-hJ-ocx" id="6XA-fa-wN6"/>
+                    </connections>
                 </tableViewController>
                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="UNIT" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="0p5-MC-r8u">
                     <rect key="frame" x="0.0" y="0.0" width="47.5" height="27.5"/>

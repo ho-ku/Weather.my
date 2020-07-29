@@ -11,4 +11,5 @@ import Foundation
 // MARK: - Constants
 struct C  {
     static let cityCellIndentifier = "cityCell"
+    static let currentUnit = "currentUnit"
 }
