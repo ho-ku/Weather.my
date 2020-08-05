@@ -12,7 +12,7 @@ import CoreLocation
 struct CityLocation {
     var city: String
     var country: String
-    var coreDataObject: Location
+    var coreDataObject: Location?
     var temperature: String
     var coordinates: CLLocationCoordinate2D
 }

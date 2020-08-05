@@ -12,4 +12,5 @@ import Foundation
 struct C  {
     static let cityCellIndentifier = "cityCell"
     static let currentUnit = "currentUnit"
+    static let locationSegue = "locationSegue"
 }

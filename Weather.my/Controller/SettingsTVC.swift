@@ -26,6 +26,8 @@ class SettingsTVC: UITableViewController {
         updateUI()
         tableView.separatorStyle = .none
         tableView.allowsSelection = false
+        tableView.backgroundColor = .white
+        unitSegmentedControl.setTitleTextAttributes([NSAttributedString.Key.foregroundColor: UIColor.black], for: .normal)
     }
     
     private func updateUI() {

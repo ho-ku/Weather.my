@@ -19,7 +19,7 @@ class GeocoderHelper {
     
     func getCityForLocation(_ location: CLLocation, completionHandler: @escaping CLGeocodeCompletionHandler) {
         let geocoder = CLGeocoder()
-        geocoder.reverseGeocodeLocation(location, completionHandler: completionHandler)
+        geocoder.reverseGeocodeLocation(location, preferredLocale: Locale(identifier: "en_US"), completionHandler: completionHandler)
     }
     
 }

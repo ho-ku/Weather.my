@@ -29,4 +29,8 @@ class UnitHelper {
         defaults.set(new.rawValue, forKey: C.currentUnit)
     }
     
+    func getSymbolForCurrentUnit() -> String {
+        return (getCurrentUnit() == nil) ? "°C" : getCurrentUnit() == .celsium ? "°C" : "°F"
+    }
+    
 }

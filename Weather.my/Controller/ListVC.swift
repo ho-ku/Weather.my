@@ -13,7 +13,8 @@ import CoreData
 class ListVC: UIViewController {
     
     private var locations: [Location] = []
-    private var currentLocation: CLLocation?
+    private var currentLocation: CityLocation?
+    private var chosenLocation: CityLocation?
     
     // MARK: - IBOutlets
     @IBOutlet weak var tableView: UITableView!
@@ -21,15 +22,22 @@ class ListVC: UIViewController {
     @IBOutlet weak var yourLocationBtn: UIButton!
     
     // MARK: - Instances
+    private let unitHelper = UnitHelper()
+    private let requestManager = RequestManager()
     private let geocoderHelper = GeocoderHelper()
     private let coreDataManager = CoreDataManager()
     private let locationManager = CLLocationManager()
     private let cache = NSCache<AnyObject, AnyObject>()
     
     // MARK: - Lifecycle
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        tableView.reloadData()
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
         yourLocationBtn.layer.cornerRadius = 20
         addButton.layer.cornerRadius = 20
         
@@ -64,6 +72,7 @@ class ListVC: UIViewController {
             self.tableView.insertRows(at: [IndexPath(row: self.locations.count - 1, section: 0)], with: .fade)
         }
         alertController.addAction(addAction)
+        alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         present(alertController, animated: true, completion: nil)
     }
     
@@ -80,22 +89,37 @@ class ListVC: UIViewController {
         present(alertController, animated: true)
     }
     
+    private func presentLimitAlert() {
+        let alertController = UIAlertController(title: "Oops..", message: "You cannot add more than five cities. It will overload geoserver.", preferredStyle: .alert)
+        alertController.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+        present(alertController, animated: true)
+    }
+    
     // MARK: - Configuring cache after cell removing
     private func removeCellFromCacheForNumber(_ num: Int) {
         cache.removeObject(forKey: "cell\(num)" as AnyObject)
-        for number in num + 1...locations.count {
-            cache.setObject(cache.object(forKey: "cell\(number)" as AnyObject)!, forKey: "cell\(number-1)" as AnyObject)
+        for number in num+1...locations.count + 1 {
+            if let newObject = cache.object(forKey: "cell\(number)" as AnyObject) {
+                cache.setObject(newObject, forKey: "cell\(number-1)" as AnyObject)
+            } else {
+                cache.removeObject(forKey: "cell\(number-1)" as AnyObject)
+            }
         }
     }
     
     // MARK: - IBActions
     @IBAction func addbtnPressed(_ sender: UIButton) {
-        presentAddLocationAlert()
+        if locations.count == 5 {
+            presentLimitAlert()
+        } else {
+            presentAddLocationAlert()
+        }
     }
     
     @IBAction func yourLocationBtnPressed(_ sender: Any) {
         if let currentLoation = currentLocation {
-            print(currentLoation.coordinate)
+            self.chosenLocation = currentLoation
+            performSegue(withIdentifier: C.locationSegue, sender: self)
         } else {
             if CLLocationManager.authorizationStatus() != .authorizedWhenInUse && CLLocationManager.authorizationStatus() != .authorizedAlways {
                 presentSettingsAlert()
@@ -105,6 +129,12 @@ class ListVC: UIViewController {
                 present(alertController, animated: true)
             }
         }
+    }
+    
+    // MARK: - Segue
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        guard let dest = segue.destination as? LocationVC else { return }
+        dest.location = chosenLocation
     }
     
 }
@@ -130,6 +160,12 @@ extension ListVC: UITableViewDelegate {
         return swipeActionsConfiguration
     }
     
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        guard let cachedLocation = cache.object(forKey: "cell\(indexPath.row)" as AnyObject) as? CityLocation else { return }
+        chosenLocation = cachedLocation
+        performSegue(withIdentifier: C.locationSegue, sender: self)
+    }
+    
 }
 
 // MARK: - UITableViewDataSource
@@ -144,16 +180,27 @@ extension ListVC: UITableViewDataSource {
         if let cachedLocation = cache.object(forKey: "cell\(indexPath.row)" as AnyObject) as? CityLocation {
             cell.cityLabel.text = cachedLocation.city
             cell.countryLabel.text = cachedLocation.country
-            cell.tempLabel.text = cachedLocation.temperature
+            if let temperature = Int(cachedLocation.temperature) {
+                cell.tempLabel.text = "\(temperature.convertedToCurrentUnit())" + unitHelper.getSymbolForCurrentUnit()
+            }
         } else {
             geocoderHelper.getCityForQuery(locations[indexPath.row].name ?? "") { [unowned self] (placemarks, error) in
-                guard let placemark = placemarks?.first, error == nil else { return }
-                DispatchQueue.main.async {
-                    cell.cityLabel.text = placemark.locality ?? "Unrecognized"
-                    cell.countryLabel.text = placemark.country ?? "Unrecognized"
-                    let citylocation = CityLocation(city: placemark.locality ?? "Unrecognized", country: placemark.country ?? "Unrecognized", coreDataObject: self.locations[indexPath.row], temperature: "XX", coordinates: placemark.location?.coordinate ?? CLLocationCoordinate2D())
-                    self.cache.setObject(citylocation as AnyObject, forKey: "cell\(indexPath.row)" as AnyObject)
+                guard let placemark = placemarks?.first, error == nil, let location = placemark.location else { return }
+                self.geocoderHelper.getCityForLocation(location) { (placemarks, error) in
+                    guard let placemark = placemarks?.first, error == nil, let lat = placemark.location?.coordinate.latitude, let lon = placemark.location?.coordinate.longitude else { return }
+                    self.requestManager.getWeatherData(lat: lat, lon: lon) { (data, _, error) in
+                        guard let data = data, let weather = try? JSONDecoder().decode(Weather.self, from: data) else { return }
+                        DispatchQueue.main.async {
+                            cell.cityLabel.text = placemark.locality ?? "Unrecognized"
+                            cell.countryLabel.text = placemark.country ?? "Unrecognized"
+                            let temperature = Int(weather.main.temp-273.15)
+                            cell.tempLabel.text = "\(temperature.convertedToCurrentUnit())" + self.unitHelper.getSymbolForCurrentUnit()
+                            let citylocation = CityLocation(city: placemark.locality ?? "Unrecognized", country: placemark.country ?? "Unrecognized", coreDataObject: self.locations[indexPath.row], temperature: "\(temperature)", coordinates: placemark.location?.coordinate ?? CLLocationCoordinate2D())
+                            self.cache.setObject(citylocation as AnyObject, forKey: "cell\(indexPath.row)" as AnyObject)
+                        }
+                    }
                 }
+                
             }
         }
         cell.selectionStyle = .none
@@ -177,8 +224,13 @@ extension ListVC: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.first else { return }
         geocoderHelper.getCityForLocation(location) { [unowned self] (placemarks, error) in
-            guard let placemarks = placemarks, let location = placemarks.first, error == nil else { return }
-            self.currentLocation = location.location
+            guard let placemarks = placemarks, let location = placemarks.first, let coors = location.location?.coordinate, error == nil else { return }
+            self.requestManager.getWeatherData(lat: coors.latitude, lon: coors.longitude) { (data, _, error) in
+                guard let data = data, error == nil, let weather = try? JSONDecoder().decode(Weather.self, from: data) else { return }
+                let temperature = Int(weather.main.temp-273.15)
+                self.currentLocation = CityLocation(city: location.locality ?? "", country: location.country ?? "", coreDataObject: nil, temperature: "\(temperature)", coordinates: coors)
+            }
+            
         }
     }
     

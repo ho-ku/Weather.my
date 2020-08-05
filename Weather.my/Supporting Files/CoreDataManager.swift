@@ -34,5 +34,11 @@ class CoreDataManager {
         appDelegate.saveContext()
     }
     
+    func add(note: String, to location: Location) {
+        guard let appDelegate = appDelegate else { return }
+        location.note = note
+        appDelegate.saveContext()
+    }
+    
     
 }
